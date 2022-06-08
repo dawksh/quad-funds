@@ -2,19 +2,26 @@
 pragma solidity ^0.8.4;
 
 contract QuadraticFunding {
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
     constructor(Project[] memory _projectsArray) payable {
         for (uint256 i = 0; i < _projectsArray.length; i++) {
             ownerToProject[_projectsArray[i].owner] = _projectsArray[i];
             ownersAddressArray.push(_projectsArray[i].owner);
         }
         totalPool = msg.value;
+        owner = msg.sender;
     }
 
-    uint256 totalPool;
+    address public owner;
+    uint256 public totalPool;
     mapping(address => Project) public ownerToProject;
-    bool publicContributionsPeriod;
-    address[] ownersAddressArray;
-    uint256 totalMatched;
+    bool public publicContributionsPeriod;
+    address[] public ownersAddressArray;
+    uint256 public totalMatched;
 
     struct Project {
         string name;
@@ -23,6 +30,10 @@ contract QuadraticFunding {
         uint256[] contributions;
         uint256 matchedAmount;
         uint256 proportionalMatchedAmount;
+    }
+
+    function togglePublicCOntributions() public onlyOwner {
+        publicContributionsPeriod = !publicContributionsPeriod;
     }
 
     function addPublicContribution(address projectOwner) external payable {
@@ -65,6 +76,16 @@ contract QuadraticFunding {
             }
             totalMatched += matchAmount;
         }
+    }
+
+    function withdrawFunds() external {
+        address projectOwner = msg.sender;
+        uint256 publicContrbution = ownerToProject[projectOwner].publicAmount;
+        uint256 proportionalAmountMatched = ownerToProject[projectOwner]
+            .proportionalMatchedAmount;
+        payable(projectOwner).transfer(
+            publicContrbution + proportionalAmountMatched
+        );
     }
 
     function sqrt(uint256 x) internal pure returns (uint256 y) {
