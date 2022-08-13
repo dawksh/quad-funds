@@ -7,11 +7,7 @@ contract QuadraticFunding {
         _;
     }
 
-    constructor(Project[] memory _projectsArray) payable {
-        for (uint256 i = 0; i < _projectsArray.length; i++) {
-            ownerToProject[_projectsArray[i].owner] = _projectsArray[i];
-            ownersAddressArray.push(_projectsArray[i].owner);
-        }
+    constructor() payable {
         totalPool = msg.value;
         owner = msg.sender;
     }
@@ -19,7 +15,7 @@ contract QuadraticFunding {
     address public owner;
     uint256 public totalPool;
     mapping(address => Project) public ownerToProject;
-    bool public publicContributionsPeriod;
+    bool public publicContributionsPeriod = true;
     address[] public ownersAddressArray;
     uint256 public totalMatched;
 
@@ -32,8 +28,14 @@ contract QuadraticFunding {
         uint256 proportionalMatchedAmount;
     }
 
-    function togglePublicCOntributions() public onlyOwner {
+    function togglePublicContributions() public onlyOwner {
         publicContributionsPeriod = !publicContributionsPeriod;
+    }
+
+    function addProject(string calldata name) external {
+        uint256[] memory x;
+        Project memory newProject = Project(name, 0, msg.sender, x, 0, 0);
+        ownerToProject[msg.sender] = newProject;
     }
 
     function addPublicContribution(address projectOwner) external payable {
